@@ -46,6 +46,10 @@ echo -e "\nRoot login prohibited"
 echo
 read -p "Is this the first master node (yes/no) " yn
 
+echo -e "\nCopy configs ...\n"
+mkdir -p /etc/rancher/k3s/
+cp ./config/k3s-config.yml /etc/rancher/k3s/config.yaml
+
 case $yn in
 	y|yes ) echo
                 read -p "Insert name of the cluster " clustername
