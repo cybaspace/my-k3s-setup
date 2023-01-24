@@ -3,7 +3,7 @@
 for f in ./users/*
 do
   user="$(basename -- $f)"
-  echo "Creating new user $user ..."
+  echo -e "\nCreating new user $user ..."
   useradd -m -G sudo $user
   mkdir /home/$user/.ssh
   chown $user:$user /home/$user/.ssh
@@ -19,6 +19,8 @@ sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
 sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
 
 systemctl restart sshd
+
+echo -e "\nRoot login prohibited"
 
 echo
 read -p "Is this the first master node (yes/no) " yn
@@ -36,10 +38,10 @@ case $yn in
                     ip=$i
                   fi
                 done
-                echo -e "\n\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443"
-                echo -e "\nInsert the following content to local file ~/.kube/config"
+                echo -e "\n\n### >>>\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443\n### <<<"
+                echo -e "\nInsert the following content to local file ~/.kube/config:\n### >>>"
                 sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml
-                echo ;;
+                echo "### <<<";;
 	* ) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
 esac
 
