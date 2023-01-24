@@ -1,10 +1,31 @@
 #! /bin/bash
 
+### Create a meaningful user prompt
+cat << EOT >> /etc/bash.bashrc
+
+NORMAL="\[\e[0m\]"
+RED="\[\e[1;31m\]"
+GREEN="\[\e[1;32m\]"
+if [[ $EUID == 0 ]] ; then
+  PS1="$RED\u [ $NORMAL\w$RED ]# $NORMAL"
+else
+  PS1="$GREEN\u [ $NORMAL\w$GREEN ]\$ $NORMAL"
+fi
+
+unset RED GREEN NORMAL
+EOT
+
 for f in ./users/*
 do
   user="$(basename -- $f)"
   echo -e "\nCreating new user $user ..."
-  useradd -m -G sudo $user
+  
+  useradd -m -G sudo --shell /bin/bash $user
+  
+  ### deactivate user prompt in users bashrc
+  sed -i 's/\(.*PS1=\)/echo >\/dev\/null #\1/g' ~/.bashrc
+  
+  ### put public key in users ssh dir
   mkdir /home/$user/.ssh
   chown $user:$user /home/$user/.ssh
   chmod 700 /home/$user/.ssh
@@ -44,4 +65,3 @@ case $yn in
                 echo "### <<<";;
 	* ) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
 esac
-
