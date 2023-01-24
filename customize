@@ -61,7 +61,7 @@ case $yn in
                 done
                 echo -e "\n\n### >>>\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443\n### <<<"
                 echo -e "\nInsert the following content to local file ~/.kube/config:\n### >>>"
-                sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml
+                sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml  | sed "s/127.0.0.1/$ip/g"
                 echo "### <<<";;
 	* ) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
 esac
