@@ -1,0 +1,10 @@
+#! /bin/bash
+
+apt update
+apt install -y curl git
+
+cd /opt
+git clone https://github.com/cybaspace/my-k3s-setup.git
+
+cd my-k3s-setup
+./customize

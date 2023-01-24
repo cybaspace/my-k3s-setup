@@ -1,0 +1,45 @@
+#! /bin/bash
+
+for f in ./users/*
+do
+  user="$(basename -- $f)"
+  echo "Creating new user $user ..."
+  useradd -m -G sudo $user
+  mkdir /home/$user/.ssh
+  chown $user:$user /home/$user/.ssh
+  chmod 700 /home/$user/.ssh
+  cp $f/authorized_keys /home/$user/.ssh/
+  chown $user:$user /home/$user/.ssh/authorized_keys
+  chmod 600 /home/$user/.ssh/authorized_keys
+done
+
+sed -i 's/%sudo	ALL=(ALL:ALL) ALL/%sudo ALL=(ALL) NOPASSWD:ALL/g' /etc/sudoers
+
+sed -i 's/PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+
+systemctl restart sshd
+
+echo
+read -p "Is this the first master node (yes/no) " yn
+
+case $yn in
+	y|yes ) echo
+                read -p "Insert name of the cluster " clustername
+                echo
+                curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+                token=`cat /var/lib/rancher/k3s/server/token`
+                for i in $(hostname -i)
+                do
+                  if [[ $i != 127* ]]
+                  then
+                    ip=$i
+                  fi
+                done
+                echo -e "\n\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443"
+                echo -e "\nInsert the following content to local file ~/.kube/config"
+                sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml
+                echo ;;
+	* ) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
+esac
+
