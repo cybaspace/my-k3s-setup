@@ -7,4 +7,5 @@ cd /opt
 git clone https://github.com/cybaspace/my-k3s-setup.git
 
 cd my-k3s-setup
-./customize
+./customize --silent <clustername>
+# ./customize --silent <ip> <token>
