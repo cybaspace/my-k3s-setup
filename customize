@@ -1,5 +1,25 @@
 #! /bin/bash
 
+## start with given parameters (silent mode):
+##   create the first node
+##     ./customize --silent <clustername>
+##   create subsequent nodes
+##     ./customize --silent <ip-first-node> <token-first-node>
+
+silent=false
+if [[ -n $1 && $1 == "--silent" ]]; then
+  silent=true
+  if [[ -n $3 ]]; then
+    ip=$2
+    token=$3
+  else
+    clustername=$2
+  fi
+fi
+
+cp print-k3s-config /usr/bin/
+chmod +x /usr/bin/print-k3s-config
+
 ### Create a meaningful user prompt
 cat << EOT >> /etc/bash.bashrc
 
@@ -50,22 +70,31 @@ echo -e "\nCopy configs ...\n"
 mkdir -p /etc/rancher/k3s/
 cp ./config/k3s-config.yml /etc/rancher/k3s/config.yaml
 
-case $yn in
-	y|yes ) echo
-                read -p "Insert name of the cluster " clustername
-                echo
-                curl -sfL https://get.k3s.io | sh -s - server --cluster-init
-                token=`cat /var/lib/rancher/k3s/server/token`
-                for i in $(hostname -i)
-                do
-                  if [[ $i != 127* ]]
-                  then
-                    ip=$i
-                  fi
-                done
-                echo -e "\n\n### >>>\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443\n### <<<"
-                echo -e "\nInsert the following content to local file ~/.kube/config:\n### >>>"
-                sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml  | sed "s/127.0.0.1/$ip/g"
-                echo "### <<<";;
-	* ) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
-esac
+if [ "$silent" = true ]; then
+  if [[ -n $clustername ]]; then
+    echo $clustername > /etc/rancher/k3s/clustername
+    curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+  else
+    curl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443
+  fi
+else
+  case $yn in
+    y|yes ) echo
+            read -p "Insert name of the cluster " clustername
+            echo
+            curl -sfL https://get.k3s.io | sh -s - server --cluster-init
+            token=`cat /var/lib/rancher/k3s/server/token`
+            for i in $(hostname -i)
+            do
+              if [[ $i != 127* ]]
+              then
+                ip=$i
+              fi
+            done
+            echo -e "\n\n### >>>\nexecute on other nodes:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443\n### <<<"
+            echo -e "\nInsert the following content to local file ~/.kube/config:\n### >>>"
+            sed "s/default/$clustername/g" /etc/rancher/k3s/k3s.yaml  | sed "s/127.0.0.1/$ip/g"
+            echo "### <<<";;
+    *) echo -e "\n\nPlease execute command:\ncurl -sfL https://get.k3s.io | K3S_TOKEN=<token> sh -s - server --server https://<master-node-ip>:6443\n\n";;
+  esac
+fi
