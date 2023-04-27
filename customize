@@ -74,6 +74,8 @@ if [ "$silent" = true ]; then
   else
     curl -sfL https://get.k3s.io | K3S_TOKEN=$token sh -s - server --server https://$ip:6443
   fi
+  chmod 644 /etc/systemd/system/k3s.service.env
+  echo K3S_KUBECONFIG_MODE=\"644\" >> /etc/systemd/system/k3s.service.env
 else
   echo
   read -p "Is this the first master node (yes/no) " yn
