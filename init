@@ -1,7 +1,7 @@
 #! /bin/bash
 
 apt update
-apt install -y curl git open-iscsi nfs-common
+apt install -y vim curl git open-iscsi nfs-common
 
 cd /opt
 git clone https://github.com/cybaspace/my-k3s-setup.git
